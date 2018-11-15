@@ -65,11 +65,14 @@
         var x, y, z;
 
 
+
+
         // Точечки
         for (var i = 0; i <= 100; i++) {
             x = Math.sin(i / 10) * 100;
             y = Math.cos(i / 10) * 100;
-            z = 100;
+            z = i * 1.1;
+
 
             geometry.vertices.push(new THREE.Vector3(x, y, z));
             geometry.colors.push(new THREE.Color(mainColor))
