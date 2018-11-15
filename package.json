@@ -1,0 +1,24 @@
+{
+  "name": "loader",
+  "version": "1.0.0",
+  "description": "loader with tree.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ribalkoko48/loader3D.git"
+  },
+  "keywords": [
+    "fragment",
+    "shader"
+  ],
+  "author": "Ribalkoko48",
+  "license": "ISC",
+  "homepage": "https://github.com/ribalkoko48/loader3D#readme",
+  "dependencies": {
+    "express": "^4.15.3"
+  }
+}
