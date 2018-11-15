@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - orbit controls</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>* {
+        margin: 0;
+        padding: 0;
+    }</style>
+
+    <style>
+        .loader3D-container {
+            position: fixed;
+            z-index: 9999;
+            top: calc(50% - 25px);
+            left: calc(50% - 25px);
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="loader3D" class="loader3D-container"></div>
+
+<script src="js/three.js"></script>
+<script src="js/OrbitControls.js"></script>
+
+<script>
+    const mainColor = '#f01526' // (r, g ,b ) = (240, 21, 38)
+    const backgroundColor = '#a3fdff'
+    const containerWith = window.innerWidth / 2
+    const containerHeight = window.innerHeight / 2
+    let scene = new THREE.Scene() // сцена
+    let renderer = new THREE.WebGLRenderer();
+    let camera = new THREE.PerspectiveCamera(90, containerWith / containerHeight, 1, 3000)
+    let controls = new THREE.OrbitControls(camera, renderer.domElement)
+    let geometry = new THREE.Geometry() // расположение и цвета
+
+
+    const init = () => {
+        // установка цвета фона
+        scene.background = new THREE.Color(backgroundColor) //(0, 203, 209);
+        // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        // renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(containerWith, containerHeight);
+
+        var container = document.getElementById('loader3D');
+        container.appendChild(renderer.domElement);
+
+        camera.position.z = 500;
+
+        // ЧТО ЕСТЬ НА СЦЕНЕ
+        var texture = (new THREE.TextureLoader).load("img/particle.png") // круговой шаблон
+        var material = new THREE.PointCloudMaterial({
+            size: 50,
+            vertexColors: THREE.VertexColors,
+            map: texture,
+            alphaTest: 0.5
+        });
+
+        var x, y, z;
+
+
+        // Точечки
+        for (var i = 0; i <= 100; i++) {
+            x = Math.sin(i / 10) * 100;
+            y = Math.cos(i / 10) * 100;
+            z = 100;
+
+            geometry.vertices.push(new THREE.Vector3(x, y, z));
+            geometry.colors.push(new THREE.Color(mainColor))
+        }
+
+        /*  gallery[0].forEach((el, index) => {
+              geometry.vertices.push(new THREE.Vector3(el[0], el[1], Math.random() * 100));
+              geometry.colors.push(new THREE.Color(Math.random(), Math.random(), Math.random()));
+          });*/
+
+        var pointCloud = new THREE.PointCloud(geometry, material); // PointCloudMaterial - типа круг
+        scene.add(pointCloud);
+        // Конец сцены
+
+        window.addEventListener('resize', onWindowResize, false);
+
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    var i = 0;
+
+    function animate() {
+        i++;
+        requestAnimationFrame(animate);
+
+       /* geometry.vertices.forEach(function (particle, index) {
+            var dX, dY, dZ;
+
+            dX = Math.sin(i / 10 + index / 2) / 10;
+            dY = 0;
+            dZ = 0;
+            particle.add(new THREE.Vector3(dX, dY, dZ));
+        });*/
+        geometry.verticesNeedUpdate = true;
+
+
+        render();
+    }
+
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    init();
+    animate();
+
+</script>
+
+</body>
+</html>
