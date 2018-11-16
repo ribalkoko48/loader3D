@@ -10,124 +10,169 @@
     }</style>
 
     <style>
-        .loader3D-container {
+        .tempcanvas {
+            height: 500px;
+            width: 500px;
+        }
+
+        .tempcanvas > canvas {
             position: fixed;
             z-index: 9999;
             top: calc(50% - 25px);
             left: calc(50% - 25px);
             transform: translate(-50%, -50%);
+            height: 500px;
+            width: 500px;
         }
     </style>
 </head>
 
 <body>
 
-<div id="loader3D" class="loader3D-container"></div>
+<div id="container" class="tempcanvas"></div>
 
 <script src="js/three.js"></script>
+<script src="js/tweenmax.js"></script>
 <script src="js/OrbitControls.js"></script>
 
 <script>
-    const mainColor = '#f01526' // (r, g ,b ) = (240, 21, 38)
-    const backgroundColor = '#a3fdff'
-    const containerWith = window.innerWidth / 2
-    const containerHeight = window.innerHeight / 2
-    let scene = new THREE.Scene() // сцена
-    let renderer = new THREE.WebGLRenderer();
-    let camera = new THREE.PerspectiveCamera(90, containerWith / containerHeight, 1, 3000)
-    let controls = new THREE.OrbitControls(camera, renderer.domElement)
-    let geometry = new THREE.Geometry() // расположение и цвета
+    let size = 100;
+    let canvas = document.createElement('canvas');
+    let ctx = canvas.getContext('2d');
+    canvas.width = size;
+    canvas.height = size;
 
-
-    const init = () => {
-        // установка цвета фона
-        scene.background = new THREE.Color(backgroundColor) //(0, 203, 209);
-        // scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
-
-        renderer.setPixelRatio(window.devicePixelRatio);
-        // renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setSize(containerWith, containerHeight);
-
-        var container = document.getElementById('loader3D');
-        container.appendChild(renderer.domElement);
-
-        camera.position.z = 500;
-
-        // ЧТО ЕСТЬ НА СЦЕНЕ
-        var texture = (new THREE.TextureLoader).load("img/particle.png") // круговой шаблон
-        var material = new THREE.PointCloudMaterial({
-            size: 50,
-            vertexColors: THREE.VertexColors,
-            map: texture,
-            alphaTest: 0.5
+    function loadImages(paths, whenLoaded) {
+        let imgs = [];
+        paths.forEach(function (path) {
+            let img = new Image;
+            img.onload = function () {
+                imgs.push(img);
+                if (imgs.length == paths.length) whenLoaded(imgs);
+            }
+            img.src = path;
         });
+    }
 
-        var x, y, z;
+    function fillUp(array, max) {
+        let length = array.length;
+        for (i = 0; i < max - length; i++) {
+            array.push(array[Math.floor(Math.random() * length)])
+        }
+        return array;
+    }
 
+    function shuffle(a) {
+        for (let i = a.length; i; i--) {
+            let j = Math.floor(Math.random() * i);
+            [a[i - 1], a[j]] = [a[j], a[i - 1]];
+        }
+        return a;
+    }
 
+    function getArrayFromImage(img) {
+        let imageCoords = [];
+        ctx.clearRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        let data = ctx.getImageData(0, 0, size, size);
+        data = data.data;
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                /*   let red = data[((size * y) + x) * 4];
+                   let green = data[((size * y) + x) * 4 + 1];
+                   let blue = data[((size * y) + x) * 4 + 2];*/
+                let alpha = data[((size * y) + x) * 4 + 3];
+                if (alpha > 0) {
+                    imageCoords.push([2 * (x - size / 2), 2 * (size / 2 - y)]);
+                }
+            }
+        }
+        return shuffle(fillUp(imageCoords, 2000));
+    }
 
+    let images = ['./img/on_line_logo.svg', './img/logo-sm.svg'];
 
-        // Точечки
-        for (var i = 0; i <= 100; i++) {
-            x = Math.sin(i / 10) * 100;
-            y = Math.cos(i / 10) * 100;
-            z = i * 1.1;
+    loadImages(images, function (loadedImages) {
 
+        let gallery = [];
+        loadedImages.forEach(function (el, index) {
+            gallery.push(getArrayFromImage(loadedImages[index]));
+        });
+        let camera, controls, scene, renderer, geometry, pointCloud;
 
+        function init() {
+            scene = new THREE.Scene();
+            renderer = new THREE.WebGLRenderer({alpha: true});
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(500, 500);
 
+            let container = document.getElementById('container');
+            container.appendChild(renderer.domElement);
+            camera = new THREE.PerspectiveCamera(90, 1, 1, 3000);
 
+            camera.position.z = 1000;
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
 
+            //let texture = (new THREE.TextureLoader).load("img/particle.png");
+            let material = new THREE.PointCloudMaterial({
+                size: 5,
+                vertexColors: THREE.VertexColors,
+                //  map: texture,
+                alphaTest: 0.5
+            });
 
-            geometry.vertices.push(new THREE.Vector3(x, y, z));
-            geometry.colors.push(new THREE.Color(mainColor))
+            geometry = new THREE.Geometry();
+
+            gallery[0].forEach((el, index) => {
+                geometry.vertices.push(new THREE.Vector3(el[0], el[1], Math.random() * 50));
+                geometry.colors.push(new THREE.Color(1, 0, 0));
+            });
+
+            pointCloud = new THREE.PointCloud(geometry, material);
+            scene.add(pointCloud);
         }
 
-        /*  gallery[0].forEach((el, index) => {
-              geometry.vertices.push(new THREE.Vector3(el[0], el[1], Math.random() * 100));
-              geometry.colors.push(new THREE.Color(Math.random(), Math.random(), Math.random()));
-          });*/
+        let i = 0;
 
-        var pointCloud = new THREE.PointCloud(geometry, material); // PointCloudMaterial - типа круг
-        scene.add(pointCloud);
-        // Конец сцены
+        function animate() {
+            i++;
+            requestAnimationFrame(animate);
+            geometry.vertices.forEach(function (particle, index) {
+                let dX, dY, dZ;
+                dX = Math.sin(i / 10 + index / 2) / 10;
+                dY = 0;
+                dZ = 0;
+                particle.add(new THREE.Vector3(dX, dY, dZ));
+            });
 
-        window.addEventListener('resize', onWindowResize, false);
+            geometry.verticesNeedUpdate = true;
 
-    }
+            render();
+        }
 
-    function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+        function render() {
+            pointCloud.rotation.y -= 0.1;
+            renderer.render(scene, camera);
+        }
 
-    var i = 0;
+        init();
+        animate();
 
-    function animate() {
-        i++;
-        requestAnimationFrame(animate);
+        let current = 0;
 
-       /* geometry.vertices.forEach(function (particle, index) {
-            var dX, dY, dZ;
-
-            dX = Math.sin(i / 10 + index / 2) / 10;
-            dY = 0;
-            dZ = 0;
-            particle.add(new THREE.Vector3(dX, dY, dZ));
-        });*/
-        geometry.verticesNeedUpdate = true;
-
-
-        render();
-    }
-
-
-    function render() {
-        renderer.render(scene, camera);
-    }
-
-    init();
-    animate();
+        setInterval(() => {
+            current++;
+            current = current % gallery.length;
+            geometry.vertices.forEach(function (particle, index) {
+                let tl = new TimelineMax();
+                const position = {
+                    x: gallery[current][index][0],
+                    y: gallery[current][index][1]
+                }
+                tl.to(particle, 0.5, position);
+            })
+        }, 1000)
+    });
 
 </script>
 
