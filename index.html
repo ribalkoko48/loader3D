@@ -10,6 +10,9 @@
     }</style>
 
     <style>
+        body {
+            background-image: url("./img/mock_background.png");
+        }
         .tempcanvas {
             height: 500px;
             width: 500px;
@@ -36,7 +39,7 @@
 <script src="js/OrbitControls.js"></script>
 
 <script>
-    let size = 100;
+    let size = 200;
     let canvas = document.createElement('canvas');
     let ctx = canvas.getContext('2d');
     canvas.width = size;
@@ -115,7 +118,7 @@
 
             //let texture = (new THREE.TextureLoader).load("img/particle.png");
             let material = new THREE.PointCloudMaterial({
-                size: 5,
+                size: 1,
                 vertexColors: THREE.VertexColors,
                 //  map: texture,
                 alphaTest: 0.5
@@ -124,7 +127,7 @@
             geometry = new THREE.Geometry();
 
             gallery[0].forEach((el, index) => {
-                geometry.vertices.push(new THREE.Vector3(el[0], el[1], Math.random() * 50));
+                geometry.vertices.push(new THREE.Vector3(el[0], el[1], Math.random() * 100));
                 geometry.colors.push(new THREE.Color(1, 0, 0));
             });
 
@@ -152,6 +155,7 @@
 
         function render() {
             pointCloud.rotation.y -= 0.1;
+            pointCloud.position.z = -1500
             renderer.render(scene, camera);
         }
 
